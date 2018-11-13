@@ -9,13 +9,6 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <%
-            Boolean usuario =(Boolean) session.getAttribute("usuario");
-            Boolean email =(Boolean) session.getAttribute("email");
-            Boolean tlf = (Boolean) session.getAttribute("tlf");
-            Boolean idioma = (Boolean) session.getAttribute("idioma");
-            Boolean rol = (Boolean) session.getAttribute("rol");
-        %>
         <title>Registro</title>
     </head>
     <body>
@@ -53,9 +46,6 @@
                     <td>
                         <input type="text" name="usuario">
                     </td>
-                    <td>
-                        <p class="error" hidden>Este usuario ya existe</p>
-                    </td>
                 </tr>
                 <tr>
                     <td>
@@ -72,9 +62,6 @@
                     <td>
                         <input type="text" name="email">
                     </td>
-                    <td>
-                        <p class="error" hidden="<%=email%>">Este email ya esta registrado</p>
-                    </td>
                 </tr>
                 <tr>
                     <td>
@@ -83,14 +70,11 @@
                     <td>
                         <input type="text" name="telefono">
                     </td>
-                    <td>
-                        <p class="error" hidden>Introduzca un n&uacute;mero de tel&eacute;fono correcto</p>
-                    </td>
                 </tr>
                 <tr>
                     <td>
                         <p class="registro">Idiomas: </p>
-                        <p class="error" hidden="<%=idioma%>">Seleccione alg&uacute;n idioma</p>
+                        
                     </td>
                     <td>
                         <input type="checkbox" name="idioma" value="ESP" checked="true">Español<br/>
@@ -108,7 +92,6 @@
                 <tr>    
                     <td>
                         <p class="registro">Rol: </p>
-                        <p class="error" hidden="<%=rol%>">Seleccione alg&u&uacute;n rol</p>
                     </td>
                     <td>
                         <input type="radio" name="rol" value="turista"> Turista<br/>

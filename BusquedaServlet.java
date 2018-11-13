@@ -3,12 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+package Servlets;
 
-
-import beans.Persona;
-import facades.PersonaFacade;
+import beans.Tour;
+import facades.TourFacade;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+import javax.ejb.EJB;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -21,10 +23,11 @@ import javax.servlet.http.HttpSession;
  *
  * @author Guillermo
  */
-@WebServlet(name = "ValidarCodigoServlet", urlPatterns = {"/ValidarCodigoServlet"})
-public class ValidarCodigoServlet extends HttpServlet {
+@WebServlet(name = "BusquedaServlet", urlPatterns = {"/BusquedaServlet"})
+public class BusquedaServlet extends HttpServlet {
 
-    private PersonaFacade personaFacade = new PersonaFacade();
+    @EJB
+    private TourFacade tourFacade =new TourFacade();
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -38,19 +41,20 @@ public class ValidarCodigoServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String actualCode = request.getParameter("code");
-        HttpSession session = request.getSession();
-        String realCode = (String) session.getAttribute("code");
+        String ciudad = (String) request.getParameter("ciudad"); // Traigo la info del campo de texto ciudad
+        String[] langs = request.getParameterValues("idioma"); // Traigo todos los idiomas que se han elegido
         
-        if(actualCode.equals(realCode)){
-            Persona p = (Persona) session.getAttribute("user");
-            p.setEstado("ACTIVO");
-            personaFacade.edit(p);
-            RequestDispatcher rd = getServletContext().getRequestDispatcher("/confirmacionRegistro.jsp");
+        List<Tour> resultList = tourFacade.getToursByCityAndLanguage(ciudad, langs); // Hago la busqueda
+        
+        if(resultList.isEmpty()){
+            RequestDispatcher rd = getServletContext().getRequestDispatcher("/busquedasinresultados.jsp"); // Redirijo
             rd.forward(request, response);
         }
         else {
-            RequestDispatcher rd = getServletContext().getRequestDispatcher("/errorRegistro.jsp");
+            HttpSession session = request.getSession();
+            session.setAttribute("resultList", resultList); // Guardamos la lista en el objeto session
+            
+            RequestDispatcher rd = getServletContext().getRequestDispatcher("/resultadobusqueda.jsp"); // Redirijo
             rd.forward(request, response);
         }
     }

@@ -3,10 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+package Servlets;
 
-
-import beans.Persona;
-import facades.PersonaFacade;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.RequestDispatcher;
@@ -21,11 +19,9 @@ import javax.servlet.http.HttpSession;
  *
  * @author Guillermo
  */
-@WebServlet(name = "ValidarCodigoServlet", urlPatterns = {"/ValidarCodigoServlet"})
-public class ValidarCodigoServlet extends HttpServlet {
+@WebServlet(name = "LogoutServlet", urlPatterns = {"/LogoutServlet"})
+public class LogoutServlet extends HttpServlet {
 
-    private PersonaFacade personaFacade = new PersonaFacade();
-    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -38,21 +34,11 @@ public class ValidarCodigoServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String actualCode = request.getParameter("code");
         HttpSession session = request.getSession();
-        String realCode = (String) session.getAttribute("code");
+        session.setAttribute("actualUser", null);
         
-        if(actualCode.equals(realCode)){
-            Persona p = (Persona) session.getAttribute("user");
-            p.setEstado("ACTIVO");
-            personaFacade.edit(p);
-            RequestDispatcher rd = getServletContext().getRequestDispatcher("/confirmacionRegistro.jsp");
-            rd.forward(request, response);
-        }
-        else {
-            RequestDispatcher rd = getServletContext().getRequestDispatcher("/errorRegistro.jsp");
-            rd.forward(request, response);
-        }
+        RequestDispatcher rd = this.getServletContext().getRequestDispatcher("/login.jsp");
+        rd.forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

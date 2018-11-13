@@ -5,7 +5,12 @@
  */
 
 
+import beans.Idioma;
+import beans.Persona;
+import facades.IdiomaFacade;
+import facades.PersonaFacade;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +20,7 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -37,6 +43,11 @@ import javax.servlet.http.HttpSession;
 @WebServlet(name = "RegistrarUsuarioServlet", urlPatterns = {"/RegistrarUsuarioServlet"})
 public class RegistrarUsuarioServlet extends HttpServlet {
 
+    @EJB
+    private PersonaFacade personaFacade = new PersonaFacade();
+    @EJB
+    private IdiomaFacade lanFacade = new IdiomaFacade();
+    
     public  String getCadena (int longitud){
         String cadenaAleatoria="";
         long milis = new java.util.GregorianCalendar().getTimeInMillis();
@@ -70,7 +81,10 @@ public class RegistrarUsuarioServlet extends HttpServlet {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress((String) session.getAttribute("email"))); // Add the given addresses to the specified recipient type.
         message.addHeader("Disposition-Notification-To",(String) session.getAttribute("email")); //  Add this value to the existing values for this header_name.
         message.setSubject("Confirmacion de registro de TrotamundoTours"); // Set the "Subject" header field.
-        String msg = "Bienvenido a TrotamundoTours señor/a "+(String) session.getAttribute("nombre")+".\n\n Solo queda un paso mas para que este 100% registrado en nuestra web. Introduzca este codigo en la pagina web para oficializar su registro: "+session.getAttribute("code")+"\n\n Un saludo!";
+        String msg = "Bienvenido a TrotamundoTours señor/a "+(String) session.getAttribute("nombre")+".\n\n Solo queda un paso mas para "
+                + "que este 100% registrado en nuestra web. "
+                + "Introduzca este codigo en la pagina web para"
+                + " oficializar su registro: "+session.getAttribute("code")+"\n\n Un saludo!";
         message.setText(msg,"ISO-8859-1","html"); //  Convenience method that sets the given String as this part's content, with a primary MIME type of "text" and the specified MIME subtype.
         // Lo enviamos.
         // Transport: An abstract class that models a message transport.
@@ -136,7 +150,6 @@ public class RegistrarUsuarioServlet extends HttpServlet {
             
             session.setAttribute("code", code);
             session.setAttribute("nombre", nombre);
-            // s.setAttribute("usuario",user);
             
             int telefono = Integer.parseInt(tel);
             Scanner sc = new Scanner(email);
@@ -145,41 +158,52 @@ public class RegistrarUsuarioServlet extends HttpServlet {
             session.setAttribute("host", host);
             
             if(idiomas.length==0) { // No se han seleccionado idiomas
-                session.setAttribute("idioma", true);
                 RequestDispatcher rd = getServletContext().getRequestDispatcher("/registro.jsp");
                 rd.forward(request, response);
-            }
-            else {
-                session.setAttribute("idioma", false);
             }
             if(rol.equals("")){
-                session.setAttribute("rol", true);
                 RequestDispatcher rd = getServletContext().getRequestDispatcher("/registro.jsp");
                 rd.forward(request, response);
-            }
-            else {
-                session.setAttribute("rol", true);
             }
             
             enviarEmail(session,request);
         
-            // Persona user = new Persona(nombre,apellido1,apellido2,usuario,password,email,tel,rol,"POR ACTIVAR");
-            // for (String lan : idiomas){
-            //      user.idiomas.add(lan);
-            // }     
+            String newID = newPersonaID();
+            Persona user = new Persona(newID);
+            user.setNombre(nombre);
+            user.setApellido1(apellido1);
+            user.setApellido2(apellido2);
+            user.setContraseña(password);
+            user.setEmail(email);
+            user.setUsuario(usuario);
+            user.setTelefono(BigInteger.valueOf(telefono));
+            user.setRol(rol);
+            user.setEstado("POR ACTIVAR");
+            List<Idioma> list = new ArrayList<>();
+            for(String s : idiomas){
+                String newIdiomaID = newIdiomaID();
+                Idioma i = new Idioma(newIdiomaID);
+                i.setLanguage(s);
+                i.setIdPersona(user);
+                list.add(i);
+                
+                lanFacade.create(i);
+            }
+            user.setIdiomaList(list);
+            
+            personaFacade.create(user);
+            
+            session.setAttribute("user", user);
         
         }
         catch(AddressException e){ // Errores del email
-            session.setAttribute("email", true);
             RequestDispatcher rd = getServletContext().getRequestDispatcher("/registro.jsp");
             rd.forward(request, response);
         }
         catch(MessagingException | NoSuchElementException e){ // Errores del email
-            session.setAttribute("email", true);
             RequestDispatcher rd = getServletContext().getRequestDispatcher("/registro.jsp");
             rd.forward(request, response);
         }catch (NumberFormatException e) { // Se han introducido letras o decimales
-            session.setAttribute("tlf", true);
             RequestDispatcher rd = getServletContext().getRequestDispatcher("/registro.jsp");
             rd.forward(request, response);
         }
@@ -236,5 +260,15 @@ public class RegistrarUsuarioServlet extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
+
+    private String newPersonaID() {
+        int i = personaFacade.findAll().size()+1;
+        return String.valueOf(i);
+    }
+    
+    private String newIdiomaID(){
+        int i = lanFacade.findAll().size()+1;
+        return String.valueOf(i);
+    }
 
 }

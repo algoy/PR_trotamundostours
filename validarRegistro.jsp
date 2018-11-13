@@ -14,7 +14,7 @@
     <body>
         <h1>Registro</h1>
         <br/>
-        <form action="/Servlet/ValidarCodigoServlet" method="post">
+        <form action="/ValidarCodigoServlet" method="post">
             <p>No falta casi nada para que estes 100% registrado en nuestra web y </p>
             <p>puedas disfrutar de todas las opciones de tours que tenemos.</p><br/>
             <p>Solo falta que abras el email que has especificado</p>

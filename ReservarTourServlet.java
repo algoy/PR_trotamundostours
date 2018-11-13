@@ -3,12 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
+package Servlets;
 
 import beans.Persona;
+import beans.Tour;
 import facades.PersonaFacade;
+import facades.TourFacade;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.List;
+import javax.ejb.EJB;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -21,10 +24,14 @@ import javax.servlet.http.HttpSession;
  *
  * @author Guillermo
  */
-@WebServlet(name = "ValidarCodigoServlet", urlPatterns = {"/ValidarCodigoServlet"})
-public class ValidarCodigoServlet extends HttpServlet {
+@WebServlet(name = "ReservarTourServlet", urlPatterns = {"/ReservarTourServlet"})
+public class ReservarTourServlet extends HttpServlet {
 
-    private PersonaFacade personaFacade = new PersonaFacade();
+
+    @EJB
+    private final TourFacade tourFacade = new TourFacade();
+    @EJB
+    private final PersonaFacade userFacade = new PersonaFacade();
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -38,19 +45,31 @@ public class ValidarCodigoServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String actualCode = request.getParameter("code");
-        HttpSession session = request.getSession();
-        String realCode = (String) session.getAttribute("code");
         
-        if(actualCode.equals(realCode)){
-            Persona p = (Persona) session.getAttribute("user");
-            p.setEstado("ACTIVO");
-            personaFacade.edit(p);
-            RequestDispatcher rd = getServletContext().getRequestDispatcher("/confirmacionRegistro.jsp");
-            rd.forward(request, response);
+        HttpSession session = request.getSession();
+        Persona actualUser = (Persona) session.getAttribute("actualUser");
+        Tour actualTour = (Tour) session.getAttribute("tour");
+        
+        if(!actualUser.getTourList().contains(actualTour)){
+            List<Persona> asistentes = actualTour.getPersonaList();
+            asistentes.add(actualUser);
+            actualTour.setPersonaList(asistentes);
+        
+            List<Tour> reservas = actualUser.getTourList();
+            reservas.add(actualTour);
+            actualUser.setTourList(reservas);
+        
+            userFacade.edit(actualUser);
+            tourFacade.edit(actualTour);
+        
+            session.setAttribute("actualUser", actualUser);
+            session.setAttribute("actualTour", actualTour);
+        
+            RequestDispatcher rd = this.getServletContext().getRequestDispatcher("/confirmacionReserva.jsp");
+            rd.forward(request, response);            
         }
         else {
-            RequestDispatcher rd = getServletContext().getRequestDispatcher("/errorRegistro.jsp");
+            RequestDispatcher rd = this.getServletContext().getRequestDispatcher("/reservaRepetida.jsp");
             rd.forward(request, response);
         }
     }
